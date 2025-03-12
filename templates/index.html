@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Voice Assistant</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 12px;
+            width: 90%;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            transition: border 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #007bff;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background-color: #007bff;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #response {
+            margin-top: 20px;
+            font-size: 1.1em;
+            color: #444;
+        }
+        .voice-btn {
+            background-color: #28a745;
+            margin-left: 10px;
+        }
+        .voice-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Flask Voice Assistant</h1>
+        <input type="text" id="commandInput" placeholder="Type your command here..." />
+        <button onclick="sendCommand()">Send Command</button>
+        <button class="voice-btn" onclick="startListening()">🎤 Speak</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        function sendCommand() {
+            const command = document.getElementById('commandInput').value;
+            fetch('/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerText = data.response;
+                const utterance = new SpeechSynthesisUtterance(data.response);
+                speechSynthesis.speak(utterance);
+            });
+        }
+
+        function startListening() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const command = event.results[0][0].transcript;
+                document.getElementById('commandInput').value = command;
+                sendCommand();
+            };
+
+            recognition.onerror = function() {
+                document.getElementById('response').innerText = 'Sorry, I did not catch that.';
+            };
+        }
+    </script>
+</body>
+</html>
